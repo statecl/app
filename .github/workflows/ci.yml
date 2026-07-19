@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  BUILDER: ghcr.io/statecl/framework
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and run C++ tests
+        run: |
+          docker run --rm -v $PWD:/src -w /src \
+            ${{ env.BUILDER }}:latest-builder-amd64-release \
+            sh -c "
+              apk add --no-cache git &&
+              cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON &&
+              cmake --build build -j\$(nproc) &&
+              ctest --test-dir build --output-on-failure
+            "
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build runtime image
+        run: >
+          docker build
+          --build-arg VARIANT=release
+          --build-arg TARGETARCH=amd64
+          -t app .
+
+      - name: Smoke test endpoint
+        run: |
+          docker run -d --name app -p 8080:8080 app
+          sleep 3
+          curl -sf http://localhost:8080/api/hello | grep -q 'State'
+          echo "OK"
+          docker stop app
