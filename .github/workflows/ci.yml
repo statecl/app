@@ -36,6 +36,6 @@ jobs:
         run: |
           ./build/app &
           sleep 3
-          curl -sf http://localhost:8080/api/hello | grep -q 'State'
+          curl -skf https://localhost:8080/api/hello | grep -q 'State'
           echo "OK"
           kill %1 2>/dev/null || true

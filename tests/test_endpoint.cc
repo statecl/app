@@ -7,8 +7,10 @@
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <boost/beast/ssl.hpp>
 
 using namespace framework;
 
@@ -20,10 +22,13 @@ struct app_test : ::testing::Test
     {
         boost::asio::io_context _ioc;
         boost::asio::ip::tcp::resolver _resolver(_ioc);
-        boost::beast::tcp_stream _stream(_ioc);
+        boost::asio::ssl::context _ssl_ctx(boost::asio::ssl::context::tlsv12_client);
+        _ssl_ctx.set_verify_mode(boost::asio::ssl::verify_none);
+        boost::beast::ssl_stream<boost::beast::tcp_stream> _stream(_ioc, _ssl_ctx);
 
         auto const _results = _resolver.resolve("127.0.0.1", std::to_string(port_));
-        _stream.connect(_results);
+        boost::beast::get_lowest_layer(_stream).connect(_results);
+        _stream.handshake(boost::asio::ssl::stream_base::client);
 
         boost::beast::http::request<boost::beast::http::string_body> _req{
             boost::beast::http::verb::get, _path, 11};
@@ -35,7 +40,7 @@ struct app_test : ::testing::Test
         http_response_t _res;
         boost::beast::http::read(_stream, _buffer, _res);
 
-        _stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+        _stream.shutdown();
         return _res;
     }
 };
