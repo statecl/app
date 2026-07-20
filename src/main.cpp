@@ -4,6 +4,7 @@ using namespace framework;
 
 int main(int argc, char *argv[])
 {
+    LOG_INFO_IMPL("Starting ...");
     int port = 8080;
     if (argc > 1)
         port = std::stoi(argv[1]);
