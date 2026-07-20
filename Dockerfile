@@ -6,7 +6,7 @@ FROM ghcr.io/statecl/framework:latest-builder-${TARGETARCH}-${VARIANT} AS builde
 WORKDIR /src
 COPY . .
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build -j$(nproc)
+    && cmake --build build -j2
 
 FROM alpine:3.18
 
