@@ -4,6 +4,7 @@ project(app CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(fmt REQUIRED)
 find_package(Framework REQUIRED)
 
 add_executable(app src/main.cpp)
