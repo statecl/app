@@ -8,36 +8,34 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: ${{ env.BUILDER }}:latest-builder-amd64-release
     steps:
       - uses: actions/checkout@v4
 
       - name: Build and run C++ tests
         run: |
-          docker run --rm -v $PWD:/src -w /src \
-            ${{ env.BUILDER }}:latest-builder-amd64-release \
-            sh -c "
-              apk add --no-cache git &&
-              cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON &&
-              cmake --build build -j2 &&
-              ctest --test-dir build --output-on-failure
-            "
+          apk add --no-cache git
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
 
   smoke:
     runs-on: ubuntu-latest
+    container:
+      image: ${{ env.BUILDER }}:latest-builder-amd64-release
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build runtime image
-        run: >
-          docker build
-          --build-arg VARIANT=release
-          --build-arg TARGETARCH=amd64
-          -t app .
+      - name: Build app
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
 
       - name: Smoke test endpoint
         run: |
-          docker run -d --name app -p 8080:8080 app
+          ./build/app &
           sleep 3
           curl -sf http://localhost:8080/api/hello | grep -q 'State'
           echo "OK"
-          docker stop app
+          kill %1 2>/dev/null || true
