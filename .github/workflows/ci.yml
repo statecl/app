@@ -9,7 +9,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: ${{ env.BUILDER }}:latest-builder-amd64-release
+      image: ghcr.io/statecl/framework:latest-builder-amd64-release
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     container:
-      image: ${{ env.BUILDER }}:latest-builder-amd64-release
+      image: ghcr.io/statecl/framework:latest-builder-amd64-release
     steps:
       - uses: actions/checkout@v4
 
